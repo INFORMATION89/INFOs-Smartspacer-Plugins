@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.compose'
 }
 
 android {
@@ -35,10 +36,17 @@ android {
     kotlinOptions {
         jvmTarget = '17'
     }
+    buildFeatures {
+        compose true
+    }
 }
 
 dependencies {
-    // Standalone: only the Smartspacer SDK, no :shared (no UI libraries needed)
+    // Standalone: no :shared. Settings screen uses Compose + Material 3 Expressive
     implementation 'com.kieronquinn.smartspacer:sdk-plugin:1.1.2'
     implementation 'androidx.core:core-ktx:1.18.0'
+    implementation platform('androidx.compose:compose-bom:2025.10.00')
+    implementation 'androidx.compose.material3:material3:1.5.0-rc01'
+    implementation 'androidx.compose.material:material-icons-extended'
+    implementation 'androidx.activity:activity-compose:1.11.0'
 }
