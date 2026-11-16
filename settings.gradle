@@ -18,3 +18,4 @@ rootProject.name = "Smartspacer Plugins"
 include ':shared'
 include ':systemstubs'
 include ':uber'
+include ':transitgo'
