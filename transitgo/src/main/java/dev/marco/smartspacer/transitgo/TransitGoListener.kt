@@ -5,6 +5,8 @@ import android.app.PendingIntent
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import com.kieronquinn.app.smartspacer.sdk.provider.SmartspacerTargetProvider
 
 /** Latest GO-mode state, or null when no trip is active. */
@@ -20,7 +22,8 @@ data class GoState(
 )
 
 object GoStore {
-    @Volatile var state: GoState? = null
+    // Compose snapshot state, so the settings screen's preview updates live with the trip
+    var state by androidx.compose.runtime.mutableStateOf<GoState?>(null)
 }
 
 class TransitGoListener : NotificationListenerService() {
