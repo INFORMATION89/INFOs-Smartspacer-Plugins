@@ -3,6 +3,7 @@ package dev.marco.smartspacer.transitgo
 import android.content.ComponentName
 import android.content.Intent
 import android.graphics.drawable.Icon as AndroidIcon
+import com.kieronquinn.app.smartspacer.sdk.utils.ComplicationTemplate
 import com.kieronquinn.app.smartspacer.sdk.model.SmartspaceTarget
 import com.kieronquinn.app.smartspacer.sdk.model.uitemplatedata.Icon
 import com.kieronquinn.app.smartspacer.sdk.model.uitemplatedata.TapAction
@@ -29,17 +30,33 @@ class TransitGoTarget : SmartspacerTargetProvider() {
                 ?.let { Icon(AndroidIcon.createWithBitmap(it), contentDescription = "Transit", shouldTint = false) }
             ?: Icon(AndroidIcon.createWithResource(ctx, R.drawable.ic_transit_go))
 
-        return listOf(
-            TargetTemplate.Basic(
-                id = "transit_go_$smartspacerId",
-                componentName = ComponentName(ctx, TransitGoTarget::class.java),
-                title = Text(state.title),
-                subtitle = state.text?.let { Text(it) },
-                icon = icon,
-                onClick = TapAction(
+        // Small Transit app icon next to the subtitle (the "supplemental" spot, where weather
+        // usually shows), so it's clear the info comes from Transit
+        val source = TransitIcon.get(ctx)?.let {
+            ComplicationTemplate.Basic(
+                "transit_go_source_$smartspacerId",
+                Icon(AndroidIcon.createWithBitmap(it), contentDescription = "Transit", shouldTint = false),
+                Text(" "), // icon only
+                TapAction(
                     pendingIntent = state.contentIntent,
                     intent = if (state.contentIntent == null) launch else null
                 )
+            ).create()
+        }
+
+        return listOf(
+            TargetTemplate.Basic(
+                "transit_go_$smartspacerId",
+                ComponentName(ctx, TransitGoTarget::class.java),
+                SmartspaceTarget.FEATURE_UNDEFINED,
+                Text(state.title),
+                state.text?.let { Text(it) },
+                icon,
+                TapAction(
+                    pendingIntent = state.contentIntent,
+                    intent = if (state.contentIntent == null) launch else null
+                ),
+                source
             ).create().apply {
                 // Same trick as the Uber plugin: with Native Smartspace, the lock screen hides
                 // this notification while our card is the first one showing. Nothing is cancelled.

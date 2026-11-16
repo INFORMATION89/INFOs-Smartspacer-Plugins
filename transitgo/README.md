@@ -7,7 +7,11 @@ The card shows what Transit's GO notification says, for example:
 - **Sal en 164 minutos** (title: when to leave or the current instruction)
 - the route chip, e.g. a green **57-A**, then **en 174 minutos** (the next step)
 
+- Transit's app icon after the subtitle, so it's clear the info comes from Transit
+
 Tapping the card opens Transit on your trip.
+
+The Transit icon uses the card's supplemental spot (a `ComplicationTemplate` passed as the Target's sub-complication), which is where Smartspacer otherwise shows a complication like the weather. While a trip is running, that complication is replaced by the Transit icon.
 
 ## Setup
 
@@ -27,7 +31,7 @@ Open them from the Target's settings in Smartspacer, or from *Transit GO for Sma
 | Hide notification on lock screen | On | Hides Transit's GO notification on the lock screen while this card is the first one showing |
 | Notification access | | Shows whether access is on and opens the system screen |
 
-The top of the screen shows a live preview of what the card is showing right now.
+The top of the screen shows a live preview of what the card is showing right now, with a pulsing **LIVE** badge while a trip is running.
 
 If both icon settings are off, or Transit has neither, the card uses Transit's own app icon, loaded from the installed Transit app at runtime (nothing of Transit's is bundled in the plugin). The plugin's bus icon is the last fallback, and is what Smartspacer shows in its Target list, since that list tints icons a single color.
 

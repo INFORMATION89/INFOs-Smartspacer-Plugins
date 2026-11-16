@@ -16,7 +16,7 @@
     <string name="section_card">Card</string>
     <string name="section_lock_screen">Lock screen</string>
     <string name="section_permissions">Permissions</string>
-    <string name="preview_live">Live now</string>
+    <string name="preview_live">LIVE</string>
     <string name="preview_idle">No trip</string>
     <string name="preview_idle_title">Start GO in Transit to see your trip here and in Smartspacer</string>
 </resources>

@@ -22,7 +22,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.DirectionsWalk
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
@@ -172,8 +175,8 @@ class SettingsActivity : ComponentActivity() {
                         Image(it.asImageBitmap(), "Transit", Modifier.size(24.dp).clip(MaterialShapes.Cookie9Sided.toShape()))
                         Spacer(Modifier.size(8.dp))
                     }
-                    Text(
-                        stringResource(if (state != null) R.string.preview_live else R.string.preview_idle),
+                    if (state != null) LiveBadge() else Text(
+                        stringResource(R.string.preview_idle),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
@@ -198,6 +201,47 @@ class SettingsActivity : ComponentActivity() {
                         )
                     }
                 }
+            }
+        }
+    }
+
+    /** "LIVE" pill with a pulsing dot, shown while a GO trip is running. */
+    @Composable
+    private fun LiveBadge() {
+        val pulse = androidx.compose.animation.core.rememberInfiniteTransition(label = "live")
+        val ring by pulse.animateFloat(
+            initialValue = 1f, targetValue = 2.4f,
+            animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                androidx.compose.animation.core.tween(1200),
+                androidx.compose.animation.core.RepeatMode.Restart
+            ),
+            label = "ring"
+        )
+        val red = Color(0xFFE53935)
+        Surface(shape = RoundedCornerShape(50), color = red.copy(alpha = 0.16f)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(14.dp)) {
+                    // Expanding, fading ring behind a solid dot
+                    Box(
+                        Modifier.size(6.dp)
+                            .graphicsLayer {
+                                scaleX = ring; scaleY = ring
+                                alpha = (2.4f - ring) / 1.4f
+                            }
+                            .background(red, CircleShape)
+                    )
+                    Box(Modifier.size(6.dp).background(red, CircleShape))
+                }
+                Spacer(Modifier.size(4.dp))
+                Text(
+                    stringResource(R.string.preview_live),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             }
         }
     }
