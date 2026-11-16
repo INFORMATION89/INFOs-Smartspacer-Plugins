@@ -9,5 +9,6 @@ data class TargetData(
     val icon: Icon,
     val title: String,
     val subtitle: String,
-    val image: Bitmap
+    /** Rendered trip card, or null if rendering failed (falls back to the basic Target) */
+    val image: Bitmap?
 )

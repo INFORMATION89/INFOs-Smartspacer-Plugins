@@ -1,0 +1,42 @@
+# Builds the Uber plugin APK on GitHub, so no local Android Studio setup is needed.
+# Run it from the Actions tab ("Build Uber plugin" > Run workflow), then download the
+# "uber-plugin" artifact from the finished run.
+name: Build Uber plugin
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'uber/**'
+      - 'shared/**'
+      - '.github/workflows/build-uber.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug APK
+        run: |
+          # Other modules use the Maps secrets plugin; an empty file keeps configuration happy
+          touch secrets.properties
+          chmod +x gradlew
+          ./gradlew :uber:assembleDebug --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uber-plugin
+          path: |
+            apks/*.apk
+            uber/build/outputs/apk/**/*.apk
+          if-no-files-found: error

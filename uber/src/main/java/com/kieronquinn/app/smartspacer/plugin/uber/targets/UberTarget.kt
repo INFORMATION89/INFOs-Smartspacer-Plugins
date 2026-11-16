@@ -2,6 +2,7 @@ package com.kieronquinn.app.smartspacer.plugin.uber.targets
 
 import android.content.ComponentName
 import android.content.Context
+import android.graphics.Bitmap
 import com.google.gson.Gson
 import com.kieronquinn.app.smartspacer.plugin.shared.repositories.DataRepository
 import com.kieronquinn.app.smartspacer.plugin.shared.ui.activities.BaseConfigurationActivity.Companion.createIntent
@@ -73,8 +74,9 @@ class UberTarget: SmartspacerTargetProvider() {
         smartspacerId: String,
         config: UberTargetData
     ): SmartspaceTarget {
-        return if(config.showExpandedInfo) {
-            toTargetWithImage(smartspacerId)
+        val renderedImage = image
+        return if(config.showExpandedInfo && renderedImage != null) {
+            toTargetWithImage(smartspacerId, renderedImage)
         } else{
             toTargetBasic(smartspacerId)
         }.apply {
@@ -84,7 +86,10 @@ class UberTarget: SmartspacerTargetProvider() {
         }
     }
 
-    private fun TargetData.toTargetWithImage(smartspacerId: String): SmartspaceTarget {
+    private fun TargetData.toTargetWithImage(
+        smartspacerId: String,
+        image: Bitmap
+    ): SmartspaceTarget {
         return TargetTemplate.Image(
             provideContext(),
             "${smartspacerId}_${notification.id}",

@@ -1,6 +1,7 @@
 package com.kieronquinn.app.smartspacer.plugin.uber.repositories
 
 import android.content.Context
+import android.util.Log
 import com.kieronquinn.app.smartspacer.plugin.uber.drawing.drawNotificationData
 import com.kieronquinn.app.smartspacer.plugin.uber.model.NotificationData
 import com.kieronquinn.app.smartspacer.plugin.uber.model.TargetData
@@ -50,9 +51,13 @@ class NotificationRepositoryImpl(private val context: Context): NotificationRepo
     }
 
     private fun NotificationData.toTargetData(): TargetData {
-        return TargetData(
-            notification, icon, title, subtitle, context.drawNotificationData(this)
-        )
+        val image = try {
+            context.drawNotificationData(this)
+        }catch (e: Exception) {
+            Log.w("UberPlugin", "Failed to render Uber target image", e)
+            null
+        }
+        return TargetData(notification, icon, title, subtitle, image)
     }
 
     override fun getTargetData(): List<TargetData> {

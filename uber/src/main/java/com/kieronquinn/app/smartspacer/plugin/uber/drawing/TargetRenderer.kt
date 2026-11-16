@@ -8,6 +8,8 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PathMeasure
 import android.graphics.Typeface
+import android.text.TextPaint
+import android.text.TextUtils
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.scale
@@ -39,7 +41,7 @@ private val fillPaint = Paint().apply {
     style = Paint.Style.FILL
 }
 
-private val textPaint = Paint().apply {
+private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
     textAlign = Paint.Align.CENTER
 }
 
@@ -55,33 +57,61 @@ private fun Canvas.drawNotificationData(
     data: NotificationData
 ) {
     val font = context.getFont()
-    val progressCar = data.progressCar.makeSquare().scale(VEHICLE_SIZE, VEHICLE_SIZE)
-    progressCar.density = 0
-    val driver = data.driver.scale(IMAGE_SIZE, IMAGE_SIZE)
-    driver.density = 0
-    val car = data.car.resize(IMAGES_WIDTH, IMAGE_SIZE)
-    car.density = 0
     fillPaint.color = context.getBackground()
     drawRect(0f, 0f, width.toFloat(), height.toFloat(), fillPaint)
+    val progressCar = data.progressCar?.makeSquare()?.scale(VEHICLE_SIZE, VEHICLE_SIZE)?.apply {
+        density = 0
+    }
     drawProgress(
         data.progress,
         progressCar,
         context.getUnfilledLineColour(),
         context.getFilledLineColour()
     )
-    val imagesLeft = (width / 2f) - (car.width / 2f)
-    val imagesTop = CANVAS_PADDING * 1.5f
-    drawBitmap(car, imagesLeft, imagesTop, null)
-    drawBitmap(driver, imagesLeft - 8f, imagesTop, null)
-    val titleTop = imagesTop + car.height + 16f + FONT_BIGGER
+    val driver = data.driver?.scale(IMAGE_SIZE, IMAGE_SIZE)?.apply { density = 0 }
+    val car = data.car?.resize(IMAGES_WIDTH, IMAGE_SIZE)?.apply { density = 0 }
+    val hasImages = driver != null || car != null
+    val title = data.expandedTitle
+    val subtitle = data.expandedSubtitle
+    //Without images, centre the text block in the space inside the progress track
+    val textBlockHeight = FONT_BIGGER + if(subtitle != null) 8f + FONT_SMALLER else 0f
+    val titleTop = if(hasImages) {
+        val imagesTop = CANVAS_PADDING * 1.5f
+        drawImages(driver, car, imagesTop)
+        imagesTop + IMAGE_SIZE + 16f + FONT_BIGGER
+    } else {
+        (height - textBlockHeight) / 2f + FONT_BIGGER * 0.8f
+    }
     val subtitleTop = titleTop + 8f + FONT_SMALLER
-    textPaint.typeface = Typeface.create(font, Typeface.BOLD)
+    val maxTextWidth = width - (CANVAS_PADDING * 2f) - 32f
     textPaint.color = context.getTextColour()
-    textPaint.textSize = FONT_BIGGER
-    drawText(data.expandedTitle, width / 2f, titleTop, textPaint)
-    textPaint.typeface = font
-    textPaint.textSize = FONT_SMALLER
-    drawText(data.expandedSubtitle, width / 2f, subtitleTop, textPaint)
+    if(title != null) {
+        textPaint.typeface = Typeface.create(font, Typeface.BOLD)
+        textPaint.textSize = FONT_BIGGER
+        drawText(title.ellipsize(maxTextWidth), width / 2f, titleTop, textPaint)
+    }
+    if(subtitle != null) {
+        textPaint.typeface = font
+        textPaint.textSize = FONT_SMALLER
+        drawText(subtitle.ellipsize(maxTextWidth), width / 2f, subtitleTop, textPaint)
+    }
+}
+
+private fun Canvas.drawImages(driver: Bitmap?, car: Bitmap?, top: Float) {
+    when {
+        car != null && driver != null -> {
+            //Original layout: driver photo overlaps the left of the car image
+            val imagesLeft = (width / 2f) - (car.width / 2f)
+            drawBitmap(car, imagesLeft, top, null)
+            drawBitmap(driver, imagesLeft - 8f, top, null)
+        }
+        car != null -> drawBitmap(car, (width / 2f) - (car.width / 2f), top, null)
+        driver != null -> drawBitmap(driver, (width / 2f) - (driver.width / 2f), top, null)
+    }
+}
+
+private fun String.ellipsize(maxWidth: Float): String {
+    return TextUtils.ellipsize(this, textPaint, maxWidth, TextUtils.TruncateAt.END).toString()
 }
 
 private fun Context.getBackground(): Int {
@@ -105,8 +135,8 @@ private fun Context.getFont(): Typeface? {
 }
 
 private fun Canvas.drawProgress(
-    end: Float,
-    car: Bitmap,
+    end: Float?,
+    car: Bitmap?,
     unfilledColour: Int,
     filledColour: Int
 ) {
@@ -115,14 +145,20 @@ private fun Canvas.drawProgress(
     scale(1f, -1f)
     val startOffset = -0.03f
     val endOffset = 0.01f
-    val offsetEnd = 1f - end.coerceAtLeast(0.05f)
     drawPaint.color = unfilledColour
     drawPath(createRoundedPath(0f + endOffset, 1f + startOffset), drawPaint)
+    //No progress available: just show the empty track
+    if(end == null) {
+        restore()
+        return
+    }
+    val offsetEnd = 1f - end.coerceIn(0.05f, 1f)
     drawPaint.color = filledColour
     val progressPath = createRoundedPath(offsetEnd + endOffset, 1f + startOffset)
     drawPath(progressPath, drawPaint)
-    val carPosition = progressPath.getVehiclePosition()
-    drawBitmap(car, carPosition, null)
+    if(car != null) {
+        drawBitmap(car, progressPath.getVehiclePosition(), null)
+    }
     restore()
 }
 
