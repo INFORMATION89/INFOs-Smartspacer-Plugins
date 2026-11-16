@@ -9,6 +9,7 @@ on:
     paths:
       - 'uber/**'
       - 'shared/**'
+      - 'systemstubs/**'
       - 'build.gradle'
       - 'settings.gradle'
       - 'gradle.properties'
@@ -30,8 +31,6 @@ jobs:
 
       - name: Build debug APK
         run: |
-          # Other modules use the Maps secrets plugin; an empty file keeps configuration happy
-          touch secrets.properties
           # The runner image ships the Android SDK; AGP downloads any missing platform
           echo "sdk.dir=$ANDROID_HOME" > local.properties
           chmod +x gradlew
