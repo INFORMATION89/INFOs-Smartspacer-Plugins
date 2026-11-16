@@ -21,7 +21,15 @@ class Settings(context: Context) {
         get() = prefs.getBoolean(KEY_STEP, true)
         set(value) = prefs.edit().putBoolean(KEY_STEP, value).apply()
 
+    /** What to add after the next step: "en 20 minutos · 6:12 a.m." or "· 4 h 00 min", or nothing */
+    enum class Extra { ARRIVAL, TIME_LEFT, NONE }
+
+    var extra: Extra
+        get() = prefs.getString(KEY_EXTRA, null)?.let { runCatching { Extra.valueOf(it) }.getOrNull() } ?: Extra.ARRIVAL
+        set(value) = prefs.edit().putString(KEY_EXTRA, value.name).apply()
+
     companion object {
+        private const val KEY_EXTRA = "card_extra"
         private const val KEY_HIDE = "hide_notification"
         private const val KEY_CHIP = "show_route_chip"
         private const val KEY_STEP = "show_step_icon"
