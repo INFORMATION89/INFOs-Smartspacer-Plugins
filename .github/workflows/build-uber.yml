@@ -9,6 +9,10 @@ on:
     paths:
       - 'uber/**'
       - 'shared/**'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - 'gradle.properties'
+      - 'gradle/**'
       - '.github/workflows/build-uber.yml'
 
 jobs:
