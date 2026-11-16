@@ -32,10 +32,11 @@ class TransitGoTarget : SmartspacerTargetProvider() {
 
         // Small Transit app icon next to the subtitle (the "supplemental" spot, where weather
         // usually shows), so it's clear the info comes from Transit
-        val source = TransitIcon.get(ctx)?.let {
+        // Logo only (no green background), tinted to match Smartspacer's text
+        val source = TransitIcon.glyph(ctx)?.let {
             ComplicationTemplate.Basic(
                 "transit_go_source_$smartspacerId",
-                Icon(AndroidIcon.createWithBitmap(it), contentDescription = "Transit", shouldTint = false),
+                Icon(AndroidIcon.createWithBitmap(it), contentDescription = "Transit", shouldTint = true),
                 Text(" "), // icon only
                 TapAction(
                     pendingIntent = state.contentIntent,
