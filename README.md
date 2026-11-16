@@ -1,8 +1,13 @@
 # INFO's Smartspacer Plugins
 
-Personal, vibecoded updates to [Smartspacer](https://github.com/KieronQuinn/Smartspacer) plugins, built with help from Claude. These are **not** official plugins and aren't affiliated with or supported by Kieron Quinn.
+Personal, vibecoded [Smartspacer](https://github.com/KieronQuinn/Smartspacer) plugins, built with help from Claude: reworked versions of official plugins, and new ones. These are **not** official plugins and aren't affiliated with or supported by Kieron Quinn.
 
-Based on [KieronQuinn/SmartspacerPlugins](https://github.com/KieronQuinn/SmartspacerPlugins). Only the plugins I've reworked are kept here, plus the shared code they need to build.
+Based on [KieronQuinn/SmartspacerPlugins](https://github.com/KieronQuinn/SmartspacerPlugins). Only the plugins I've reworked or written are kept here, plus the shared code they need to build.
+
+| Plugin | Folder | What it shows | Status |
+|---|---|---|---|
+| Uber | [`uber/`](uber) | Your Uber ride: pickup time, driver, car, progress | Reworked official plugin |
+| Transit GO | [`transitgo/`](transitgo) | Your active Transit GO trip, with the route chip | New plugin |
 
 ## Plugins
 
@@ -19,31 +24,43 @@ The original plugin stopped working once Uber redesigned its trip notifications 
 
 ### Transit GO (`transitgo/`)
 
-Shows your active [Transit](https://transitapp.com) GO trip in Smartspacer: "leave in N minutes", the next step, and Transit's colored route chip (like a green "57-A").
+Shows your active [Transit](https://transitapp.com) GO trip in Smartspacer: "leave in N minutes", the next step, and Transit's colored route chip (like a green "57-A"). Tapping the card opens Transit.
 
 - reads Transit's GO notification (the live trip on the `go_mode` channel) with its own notification listener
 - copies the route chip and step icon (wait, walk, ride) from Transit's notification layout
 - can hide Transit's GO notification on the lock screen while its card is first, like the Uber plugin (needs Native Smartspace; nothing is cancelled)
-- settings screen (from Smartspacer or the app drawer) to turn each of these on or off
+- Material 3 Expressive settings screen with wallpaper colors and a live preview of the card
 
-After installing, turn on **Notification access** for *Transit GO for Smartspacer*, then add the **Transit GO** Target in Smartspacer.
+Full details, setup and how it works: [`transitgo/README.md`](transitgo/README.md).
 
-The route chip and step icon are found by Transit's internal view names, so a Transit update may need the names adjusted. Debug builds dump Transit's layout once per start: `adb logcat -s TransitGoDump`.
+## Installing
+
+Download the APK from the latest run in the **Actions** tab (artifacts `uber-plugin` and `transitgo-plugin`), or build it yourself (below), then install it on your phone.
+
+These are debug builds signed with a different key than the official plugins, so uninstall the official Uber plugin before installing this one.
 
 ## Building
 
-GitHub Actions builds the APK on every push that touches the plugin. To run it by hand, open **Actions → Build Uber plugin → Run workflow**, then download the `uber-plugin` artifact.
+GitHub Actions builds each plugin on every push that touches it. To run one by hand, open **Actions → Build Uber plugin** (or **Build Transit GO plugin**) **→ Run workflow**, then download the artifact.
 
-Locally: `./gradlew :uber:assembleDebug` (the APK lands in `apks/`).
+Locally, with JDK 17+ and the Android SDK (Android 37 platform):
 
-These are debug builds signed with a different key than the official plugins, so uninstall the official Uber plugin before installing.
+```
+./gradlew :uber:assembleDebug
+./gradlew :transitgo:assembleDebug
+```
+
+The APKs land in `apks/`. Delete the old APK there before building the same plugin again, or packaging fails with "already contains entry".
+
+Toolchain: Gradle 9.4, Android Gradle Plugin 9.2, Kotlin 2.4, compile SDK 37. Transit GO also uses Compose with Material 3 `1.5.0-rc01` (the Expressive APIs aren't in a stable release yet).
 
 ### Debugging
 
-Debug builds log every Uber notification they see:
+Debug builds log what they read:
 
 ```
 adb logcat -s UberPlugin
+adb logcat -s TransitGo TransitGoDump
 ```
 
 ## License
