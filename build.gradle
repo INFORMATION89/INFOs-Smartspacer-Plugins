@@ -48,7 +48,9 @@ ext {
     signingConfigs = {
         release {
             def keystore = getKeystoreProperties()
-            if (keystore != null) {
+            // Skip when there is no keystore.properties (e.g. CI debug builds): Gradle 9
+            // rejects file('')
+            if (keystore != null && keystore.getProperty("storeFile")) {
                 storeFile file(keystore.getProperty("storeFile"))
                 storePassword keystore.getProperty("storePassword")
                 keyAlias keystore.getProperty("keyAlias")
