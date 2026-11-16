@@ -7,7 +7,7 @@ The card shows what Transit's GO notification says, for example:
 - **Sal en 164 minutos** (title: when to leave or the current instruction)
 - the route chip, e.g. a green **57-A**, then **en 174 minutos** (the next step)
 
-- Transit's logo after the subtitle, so it's clear the info comes from Transit. It's the logo alone, without the app icon's green background (the adaptive icon's monochrome or foreground layer), tinted to match Smartspacer's text
+- Transit's logo and the word "Transit" after the subtitle, so it's clear the info comes from Transit. It's the logo alone, without the app icon's green background (the adaptive icon's monochrome or foreground layer), tinted to match Smartspacer's text
 
 Tapping the card opens Transit on your trip.
 

@@ -37,7 +37,7 @@ class TransitGoTarget : SmartspacerTargetProvider() {
             ComplicationTemplate.Basic(
                 "transit_go_source_$smartspacerId",
                 Icon(AndroidIcon.createWithBitmap(it), contentDescription = "Transit", shouldTint = true),
-                Text(" "), // icon only
+                Text("Transit"),
                 TapAction(
                     pendingIntent = state.contentIntent,
                     intent = if (state.contentIntent == null) launch else null
