@@ -19,11 +19,14 @@ class TransitGoTarget : SmartspacerTargetProvider() {
         val launch = ctx.packageManager
             .getLaunchIntentForPackage(TransitGoListener.TRANSIT_PACKAGE)
 
-        // Route chip (full color) > step icon (tinted like Smartspacer's text) > bus glyph
+        // Route chip (full color) > step icon (tinted like Smartspacer's text)
+        //   > Transit's app icon (full color) > bus glyph
         val icon = state.chip?.takeIf { settings.showRouteChip }
             ?.let { Icon(AndroidIcon.createWithBitmap(it), contentDescription = state.routeName, shouldTint = false) }
             ?: state.stepIcon?.takeIf { settings.showStepIcon }
                 ?.let { Icon(AndroidIcon.createWithBitmap(it), shouldTint = true) }
+            ?: TransitIcon.get(ctx)
+                ?.let { Icon(AndroidIcon.createWithBitmap(it), contentDescription = "Transit", shouldTint = false) }
             ?: Icon(AndroidIcon.createWithResource(ctx, R.drawable.ic_transit_go))
 
         return listOf(

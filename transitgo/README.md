@@ -29,7 +29,7 @@ Open them from the Target's settings in Smartspacer, or from *Transit GO for Sma
 
 The top of the screen shows a live preview of what the card is showing right now.
 
-If both icon settings are off, or Transit has neither, the card uses the plugin's bus icon.
+If both icon settings are off, or Transit has neither, the card uses Transit's own app icon, loaded from the installed Transit app at runtime (nothing of Transit's is bundled in the plugin). The plugin's bus icon is the last fallback, and is what Smartspacer shows in its Target list, since that list tints icons a single color.
 
 ## How it works
 
@@ -75,6 +75,7 @@ adb shell run-as dev.marco.smartspacer.transitgo ls files/dump
 | `TransitGoListener.kt` | Notification listener: picks the live GO notification and stores the trip state |
 | `ChipRenderer.kt` | Rebuilds Transit's layout and draws the route chip and step icon |
 | `TransitGoTarget.kt` | The Smartspacer Target: builds the card from the trip state and settings |
+| `TransitIcon.kt` | Loads Transit's app icon from the installed app |
 | `Settings.kt` | The three settings, stored in SharedPreferences |
 | `SettingsActivity.kt` | Compose settings screen (Material 3 Expressive) |
 | `LayoutDumper.kt` | Debug-only dump of Transit's layout |

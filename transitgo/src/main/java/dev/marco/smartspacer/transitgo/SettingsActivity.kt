@@ -155,6 +155,7 @@ class SettingsActivity : ComponentActivity() {
     }
 
     /** Shows what the Smartspacer card shows right now, chip included. */
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     @Composable
     private fun PreviewCard() {
         val state = GoStore.state
@@ -164,11 +165,19 @@ class SettingsActivity : ComponentActivity() {
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
         ) {
             Column(Modifier.padding(24.dp)) {
-                Text(
-                    stringResource(if (state != null) R.string.preview_live else R.string.preview_idle),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Transit's own app icon, loaded from the installed app
+                    val transitIcon = remember { TransitIcon.get(this@SettingsActivity) }
+                    transitIcon?.let {
+                        Image(it.asImageBitmap(), "Transit", Modifier.size(24.dp).clip(MaterialShapes.Cookie9Sided.toShape()))
+                        Spacer(Modifier.size(8.dp))
+                    }
+                    Text(
+                        stringResource(if (state != null) R.string.preview_live else R.string.preview_idle),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    )
+                }
                 Spacer(Modifier.height(8.dp))
                 Text(
                     state?.title ?: stringResource(R.string.preview_idle_title),
