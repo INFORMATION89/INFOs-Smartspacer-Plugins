@@ -17,6 +17,10 @@ data class GoState(
     val chip: android.graphics.Bitmap? = null,
     val routeName: String? = null,
     val stepIcon: android.graphics.Bitmap? = null,
+    /** Arrival time, e.g. "6:12 a.m." */
+    val arrival: String? = null,
+    /** Time left in the trip, e.g. "4 h 00 min" */
+    val timeLeft: String? = null,
     /** Key of Transit's GO notification, so Native Smartspace can hide it on the lock screen */
     val notificationKey: String? = null
 )
@@ -73,11 +77,11 @@ class TransitGoListener : NotificationListenerService() {
 
         // The route chip (e.g. green "57-A") and step icon live in the expanded custom layout
         val r = ChipRenderer.render(this, sbn.notification.bigContentView)
-        Log.d(TAG, "update: title=$title text=$text route=${r?.routeName} chip=${r?.chip != null} step=${r?.stepIcon != null}")
+        Log.d(TAG, "update: title=$title text=$text route=${r?.routeName} chip=${r?.chip != null} step=${r?.stepIcon != null} arrival=${r?.arrival} left=${r?.timeLeft}")
 
         GoStore.state = GoState(
             title, text, sbn.notification.contentIntent,
-            r?.chip, r?.routeName, r?.stepIcon, sbn.key
+            r?.chip, r?.routeName, r?.stepIcon, r?.arrival, r?.timeLeft, sbn.key
         )
         notifyTarget()
     }

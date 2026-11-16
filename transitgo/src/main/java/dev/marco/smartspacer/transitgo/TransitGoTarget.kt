@@ -11,6 +11,17 @@ import com.kieronquinn.app.smartspacer.sdk.model.uitemplatedata.Text
 import com.kieronquinn.app.smartspacer.sdk.provider.SmartspacerTargetProvider
 import com.kieronquinn.app.smartspacer.sdk.utils.TargetTemplate
 
+/** The card's subtitle: Transit's next step, then " · " and the arrival time or time left. */
+@Suppress("UNUSED_PARAMETER")
+fun cardSubtitle(context: android.content.Context, state: GoState, settings: Settings): String? {
+    val extra = when (settings.extra) {
+        Settings.Extra.ARRIVAL -> state.arrival
+        Settings.Extra.TIME_LEFT -> state.timeLeft
+        Settings.Extra.NONE -> null
+    }
+    return listOfNotNull(state.text, extra).joinToString(" · ").takeIf { it.isNotEmpty() }
+}
+
 class TransitGoTarget : SmartspacerTargetProvider() {
 
     override fun getSmartspaceTargets(smartspacerId: String): List<SmartspaceTarget> {
@@ -51,7 +62,7 @@ class TransitGoTarget : SmartspacerTargetProvider() {
                 ComponentName(ctx, TransitGoTarget::class.java),
                 SmartspaceTarget.FEATURE_UNDEFINED,
                 Text(state.title),
-                state.text?.let { Text(it) },
+                cardSubtitle(ctx, state, settings)?.let { Text(it) },
                 icon,
                 TapAction(
                     pendingIntent = state.contentIntent,

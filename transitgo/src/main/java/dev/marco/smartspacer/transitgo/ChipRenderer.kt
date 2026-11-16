@@ -19,7 +19,18 @@ object ChipRenderer {
     private const val TAG = "TransitGo"
     private const val SCALE = 3f // draw larger so the route text stays sharp
 
-    data class Rendered(val chip: Bitmap?, val routeName: String?, val stepIcon: Bitmap?)
+    data class Rendered(
+        val chip: Bitmap?,
+        val routeName: String?,
+        val stepIcon: Bitmap?,
+        /** Arrival time only, e.g. "6:12 a.m.", from Transit's "Llegada a las 6:12 a.m." */
+        val arrival: String?,
+        /** Time left in the trip, e.g. "4 h 00 min", from Transit's bottom-right label */
+        val timeLeft: String?
+    )
+
+    // A clock time like "6:12", "18:05", "6:12 a.m.", "6:12 PM"
+    private val TIME = Regex("""\d{1,2}:\d{2}(\s*[aApP]\.?\s?[mM]\.?)?""")
 
     fun render(context: Context, rv: RemoteViews?): Rendered? {
         if (rv == null) return null
@@ -40,7 +51,15 @@ object ChipRenderer {
             val stepView = (root.findByName("image") as? ImageView)
                 ?.takeIf { it.visibility == View.VISIBLE && it.width > 0 && it.drawable != null }
 
-            Rendered(chipView?.let(::drawSquare), routeName, stepView?.let(::drawSquare))
+            // Bottom-left label, e.g. "Llegada a las 6:12 a.m."; keep just the time
+            val arrivalLabel = (root.findByName("leftTextView") as? TextView)
+                ?.takeIf { it.visibility == View.VISIBLE }?.text?.toString()
+            val arrival = arrivalLabel?.let { TIME.find(it)?.value?.trim() }
+
+            val timeLeft = (root.findByName("rightTextView") as? TextView)
+                ?.takeIf { it.visibility == View.VISIBLE }?.text?.toString()?.trim()?.takeIf { it.isNotEmpty() }
+
+            Rendered(chipView?.let(::drawSquare), routeName, stepView?.let(::drawSquare), arrival, timeLeft)
         } catch (t: Throwable) {
             Log.w(TAG, "Couldn't render Transit's layout", t)
             null

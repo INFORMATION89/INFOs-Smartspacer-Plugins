@@ -32,6 +32,7 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.DirectionsBus
 import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -42,6 +43,7 @@ import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -77,6 +79,7 @@ import com.kieronquinn.app.smartspacer.sdk.provider.SmartspacerTargetProvider
 class SettingsActivity : ComponentActivity() {
 
     private var accessGranted by mutableStateOf(false)
+    private var settingsVersion by mutableStateOf(0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -132,9 +135,10 @@ class SettingsActivity : ComponentActivity() {
                     ToggleRow(
                         Icons.AutoMirrored.Rounded.DirectionsWalk, MaterialShapes.Clover4Leaf.toShape(),
                         R.string.setting_step_title, R.string.setting_step_summary,
-                        settings.showStepIcon, position = Position.Last
+                        settings.showStepIcon, position = Position.Middle
                     ) { settings.showStepIcon = it }
                 }
+                item { ExtraRow(settings, MaterialShapes.Arch.toShape()) }
 
                 item { SectionHeader(R.string.section_lock_screen) }
                 item {
@@ -157,91 +161,108 @@ class SettingsActivity : ComponentActivity() {
         }
     }
 
-    /** Shows what the Smartspacer card shows right now, chip included. */
-    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
+    /**
+     * Mirrors the Smartspacer card exactly: title, then the card icon (same order as the
+     * Target: route chip > step icon > Transit icon), the next step, and Transit's logo + name.
+     */
     @Composable
     private fun PreviewCard() {
         val state = GoStore.state
+        settingsVersion // re-read the settings when a toggle changes
+        val settings = Settings(this)
+        val onCard = MaterialTheme.colorScheme.onPrimaryContainer
+        val glyph = remember { TransitIcon.glyph(this@SettingsActivity) }
+        val appIcon = remember { TransitIcon.get(this@SettingsActivity) }
         Surface(
             shape = RoundedCornerShape(32.dp),
             color = MaterialTheme.colorScheme.primaryContainer,
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
         ) {
             Column(Modifier.padding(24.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Transit's own app icon, loaded from the installed app
-                    val transitIcon = remember { TransitIcon.get(this@SettingsActivity) }
-                    transitIcon?.let {
-                        Image(it.asImageBitmap(), "Transit", Modifier.size(24.dp).clip(MaterialShapes.Cookie9Sided.toShape()))
-                        Spacer(Modifier.size(8.dp))
-                    }
-                    if (state != null) LiveBadge() else Text(
-                        stringResource(R.string.preview_idle),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                    )
-                }
-                Spacer(Modifier.height(8.dp))
                 Text(
                     state?.title ?: stringResource(R.string.preview_idle_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = onCard
                 )
                 if (state != null) {
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-                        state.chip?.let {
-                            Image(it.asImageBitmap(), state.routeName, Modifier.size(28.dp))
-                            Spacer(Modifier.size(6.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
+                        val chip = state.chip?.takeIf { settings.showRouteChip }
+                        val step = state.stepIcon?.takeIf { settings.showStepIcon }
+                        when {
+                            chip != null -> Image(chip.asImageBitmap(), state.routeName, Modifier.size(28.dp))
+                            step != null -> Image(step.asImageBitmap(), null, Modifier.size(24.dp),
+                                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(onCard))
+                            appIcon != null -> Image(appIcon.asImageBitmap(), "Transit", Modifier.size(24.dp))
                         }
+                        Spacer(Modifier.size(8.dp))
                         Text(
-                            state.text.orEmpty(),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            cardSubtitle(this@SettingsActivity, state, settings).orEmpty(),
+                            style = MaterialTheme.typography.titleMedium, color = onCard,
+                            maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
+                        glyph?.let {
+                            Spacer(Modifier.size(14.dp))
+                            Image(it.asImageBitmap(), null, Modifier.size(22.dp),
+                                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(onCard))
+                            Spacer(Modifier.size(6.dp))
+                            Text("Transit", style = MaterialTheme.typography.titleMedium, color = onCard)
+                        }
                     }
                 }
             }
         }
     }
 
-    /** "LIVE" pill with a pulsing dot, shown while a GO trip is running. */
+    /** Arrival time / Time left / Off, as a segmented button under the row's text. */
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    private fun LiveBadge() {
-        val pulse = androidx.compose.animation.core.rememberInfiniteTransition(label = "live")
-        val ring by pulse.animateFloat(
-            initialValue = 1f, targetValue = 2.4f,
-            animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-                androidx.compose.animation.core.tween(1200),
-                androidx.compose.animation.core.RepeatMode.Restart
-            ),
-            label = "ring"
+    private fun ExtraRow(settings: Settings, iconShape: Shape) {
+        var selected by remember { mutableStateOf(settings.extra) }
+        val options = listOf(
+            Settings.Extra.ARRIVAL to R.string.setting_extra_arrival,
+            Settings.Extra.TIME_LEFT to R.string.setting_extra_time_left,
+            Settings.Extra.NONE to R.string.setting_extra_none
         )
-        val red = Color(0xFFE53935)
-        Surface(shape = RoundedCornerShape(50), color = red.copy(alpha = 0.16f)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(14.dp)) {
-                    // Expanding, fading ring behind a solid dot
+        Surface(
+            shape = Position.Last.shape(),
+            color = MaterialTheme.colorScheme.surfaceBright,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 18.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        Modifier.size(6.dp)
-                            .graphicsLayer {
-                                scaleX = ring; scaleY = ring
-                                alpha = (2.4f - ring) / 1.4f
-                            }
-                            .background(red, CircleShape)
-                    )
-                    Box(Modifier.size(6.dp).background(red, CircleShape))
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.size(44.dp).background(MaterialTheme.colorScheme.secondaryContainer, iconShape)
+                    ) {
+                        Icon(Icons.Rounded.Schedule, null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(22.dp))
+                    }
+                    Column(Modifier.weight(1f).padding(start = 16.dp)) {
+                        Text(stringResource(R.string.setting_extra_title), style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            stringResource(R.string.setting_extra_summary),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
-                Spacer(Modifier.size(4.dp))
-                Text(
-                    stringResource(R.string.preview_live),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                androidx.compose.material3.SingleChoiceSegmentedButtonRow(
+                    Modifier.fillMaxWidth().padding(start = 60.dp, top = 12.dp)
+                ) {
+                    options.forEachIndexed { i, (value, label) ->
+                        SegmentedButton(
+                            selected = selected == value,
+                            onClick = {
+                                selected = value
+                                settings.extra = value
+                                settingsVersion++
+                                SmartspacerTargetProvider.notifyChange(this@SettingsActivity, TransitGoTarget::class.java)
+                            },
+                            shape = androidx.compose.material3.SegmentedButtonDefaults.itemShape(i, options.size)
+                        ) { Text(stringResource(label), maxLines = 1) }
+                    }
+                }
             }
         }
     }
@@ -276,6 +297,7 @@ class SettingsActivity : ComponentActivity() {
         val toggle = { value: Boolean ->
             checked = value
             onChange(value)
+            settingsVersion++
             // Redraw the card with the new setting
             SmartspacerTargetProvider.notifyChange(this, TransitGoTarget::class.java)
         }
@@ -338,6 +360,28 @@ private fun SettingsTheme(content: @Composable () -> Unit) {
     MaterialExpressiveTheme(
         colorScheme = colors,
         motionScheme = MotionScheme.expressive(),
+        typography = googleSansTypography(),
         content = content
+    )
+}
+
+/** Google Sans Text, the font Smartspacer and its other plugins use in their settings. */
+private val GoogleSansText = androidx.compose.ui.text.font.FontFamily(
+    androidx.compose.ui.text.font.Font(R.font.google_sans_text_regular, FontWeight.Normal),
+    androidx.compose.ui.text.font.Font(R.font.google_sans_text_medium, FontWeight.Medium),
+    androidx.compose.ui.text.font.Font(R.font.google_sans_text_medium, FontWeight.SemiBold),
+    androidx.compose.ui.text.font.Font(R.font.google_sans_text_bold, FontWeight.Bold)
+)
+
+/** The default Material 3 type scale with every style switched to Google Sans Text. */
+private fun googleSansTypography(): androidx.compose.material3.Typography {
+    val t = androidx.compose.material3.Typography()
+    fun androidx.compose.ui.text.TextStyle.gs() = copy(fontFamily = GoogleSansText)
+    return androidx.compose.material3.Typography(
+        displayLarge = t.displayLarge.gs(), displayMedium = t.displayMedium.gs(), displaySmall = t.displaySmall.gs(),
+        headlineLarge = t.headlineLarge.gs(), headlineMedium = t.headlineMedium.gs(), headlineSmall = t.headlineSmall.gs(),
+        titleLarge = t.titleLarge.gs(), titleMedium = t.titleMedium.gs(), titleSmall = t.titleSmall.gs(),
+        bodyLarge = t.bodyLarge.gs(), bodyMedium = t.bodyMedium.gs(), bodySmall = t.bodySmall.gs(),
+        labelLarge = t.labelLarge.gs(), labelMedium = t.labelMedium.gs(), labelSmall = t.labelSmall.gs()
     )
 }

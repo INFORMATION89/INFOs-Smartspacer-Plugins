@@ -4,10 +4,13 @@ Shows your active [Transit](https://transitapp.com) **GO** trip as a Smartspacer
 
 The card shows what Transit's GO notification says, for example:
 
-- **Sal en 164 minutos** (title: when to leave or the current instruction)
-- the route chip, e.g. a green **57-A**, then **en 174 minutos** (the next step)
+> **Sal en 5 minutos**
+> [57-A] en 16 minutos · 6:44 a.m.   [Transit logo] Transit
 
-- Transit's logo and the word "Transit" after the subtitle, so it's clear the info comes from Transit. It's the logo alone, without the app icon's green background (the adaptive icon's monochrome or foreground layer), tinted to match Smartspacer's text
+- **Title:** when to leave, or the current instruction
+- **Icon:** Transit's route chip, e.g. a green **57-A**
+- **Subtitle:** the next step (**en 16 minutos**), then either the **arrival time** (`· 6:44 a.m.`) or the **time left** in the trip (`· 3 h 07 min`), whichever you pick in the settings
+- **Transit's logo and the word "Transit"** after the subtitle, so it's clear the info comes from Transit. It's the logo alone, without the app icon's green background (the adaptive icon's monochrome or foreground layer), tinted to match Smartspacer's text
 
 Tapping the card opens Transit on your trip.
 
@@ -28,10 +31,11 @@ Open them from the Target's settings in Smartspacer, or from *Transit GO for Sma
 |---|---|---|
 | Show route chip | On | Uses Transit's colored route chip (like 57-A) as the card icon |
 | Show step icon | On | When there's no route chip (e.g. walking), uses Transit's icon for the current step, tinted to match Smartspacer |
+| After the next step | Arrival | What follows the next step on the card: **Arrival** (`· 6:44 a.m.`), **Time left** (`· 3 h 07 min`) or **Off** |
 | Hide notification on lock screen | On | Hides Transit's GO notification on the lock screen while this card is the first one showing |
 | Notification access | | Shows whether access is on and opens the system screen |
 
-The top of the screen shows a live preview of what the card is showing right now, with a pulsing **LIVE** badge while a trip is running.
+The top of the screen is a live preview that mirrors the card on your home screen and updates with the trip and with each setting. The screen uses Material 3 Expressive with your wallpaper colors, and Google Sans Text like Smartspacer's other plugins.
 
 If both icon settings are off, or Transit has neither, the card uses Transit's own app icon, loaded from the installed Transit app at runtime (nothing of Transit's is bundled in the plugin). The plugin's bus icon is the last fallback, and is what Smartspacer shows in its Target list, since that list tints icons a single color.
 
@@ -47,6 +51,8 @@ If both icon settings are off, or Transit has neither, the card uses Transit's o
 | `text` (inside the chip) | Route name, e.g. "57-A" |
 | `image` | Step icon: clock while waiting, walk, ride... |
 | `main_instruction` / `next_instruction` | Same text as the title / sub text |
+| `leftTextView` | "Llegada a las 6:44 a.m.": the plugin keeps just the time |
+| `rightTextView` | Time left in the trip, e.g. "3 h 07 min" |
 
 Each one is drawn at 3× into a square bitmap (Smartspacer squeezes icons into a square, so a wide image would look distorted).
 
@@ -79,7 +85,8 @@ adb shell run-as dev.marco.smartspacer.transitgo ls files/dump
 | `TransitGoListener.kt` | Notification listener: picks the live GO notification and stores the trip state |
 | `ChipRenderer.kt` | Rebuilds Transit's layout and draws the route chip and step icon |
 | `TransitGoTarget.kt` | The Smartspacer Target: builds the card from the trip state and settings |
-| `TransitIcon.kt` | Loads Transit's app icon from the installed app |
+| `TransitIcon.kt` | Loads Transit's app icon, or just its logo, from the installed app |
+| `res/font/` | Google Sans Text (regular, medium, bold), the same files `shared/` ships |
 | `Settings.kt` | The three settings, stored in SharedPreferences |
 | `SettingsActivity.kt` | Compose settings screen (Material 3 Expressive) |
 | `LayoutDumper.kt` | Debug-only dump of Transit's layout |
