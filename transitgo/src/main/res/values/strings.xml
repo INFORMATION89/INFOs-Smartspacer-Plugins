@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Transit GO for Smartspacer</string>
+    <string name="target_label">Transit GO</string>
+    <string name="target_description">Shows your active Transit GO trip</string>
+    <string name="settings_title">Transit GO settings</string>
+    <string name="setting_hide_title">Hide notification on lock screen</string>
+    <string name="setting_hide_summary">Hides Transit\'s GO notification on the lock screen while this card is the first one showing. Needs Native Smartspace. The notification stays in the shade.</string>
+    <string name="setting_chip_title">Show route chip</string>
+    <string name="setting_chip_summary">Uses Transit\'s colored route chip (like 57-A) as the card icon.</string>
+    <string name="setting_step_title">Show step icon</string>
+    <string name="setting_step_summary">When there\'s no route chip, uses Transit\'s icon for the current step (wait, walk, ride).</string>
+    <string name="setting_access">Notification access</string>
+</resources>

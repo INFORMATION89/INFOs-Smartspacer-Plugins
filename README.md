@@ -17,6 +17,19 @@ The original plugin stopped working once Uber redesigned its trip notifications 
 - shows only the notification that looks most like the active trip
 - draws the trip card from whatever's available (driver photo, car, progress), and falls back to a text-only Target if it can't
 
+### Transit GO (`transitgo/`)
+
+Shows your active [Transit](https://transitapp.com) GO trip in Smartspacer: "leave in N minutes", the next step, and Transit's colored route chip (like a green "57-A").
+
+- reads Transit's GO notification (the live trip on the `go_mode` channel) with its own notification listener
+- copies the route chip and step icon (wait, walk, ride) from Transit's notification layout
+- can hide Transit's GO notification on the lock screen while its card is first, like the Uber plugin (needs Native Smartspace; nothing is cancelled)
+- settings screen (from Smartspacer or the app drawer) to turn each of these on or off
+
+After installing, turn on **Notification access** for *Transit GO for Smartspacer*, then add the **Transit GO** Target in Smartspacer.
+
+The route chip and step icon are found by Transit's internal view names, so a Transit update may need the names adjusted. Debug builds dump Transit's layout once per start: `adb logcat -s TransitGoDump`.
+
 ## Building
 
 GitHub Actions builds the APK on every push that touches the plugin. To run it by hand, open **Actions → Build Uber plugin → Run workflow**, then download the `uber-plugin` artifact.
