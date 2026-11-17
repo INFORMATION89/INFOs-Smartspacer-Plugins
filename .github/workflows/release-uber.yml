@@ -1,0 +1,54 @@
+# Publishes a GitHub release of the Uber plugin when an Uber version tag (uber-v1.1.0, ...) is
+# pushed. The release text comes from .github/release-notes-uber.md. Signed with the permanent
+# release key from the SIGNING_KEYSTORE_BASE64 and SIGNING_PASSWORD secrets, so every release
+# installs over the previous one.
+name: Release Uber plugin
+
+on:
+  push:
+    tags: ['uber-v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Stops here if the secrets are missing, rather than publishing an unsigned APK
+      - name: Set up the signing key
+        env:
+          SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          if [ -z "$SIGNING_KEYSTORE_BASE64" ]; then echo "::error::SIGNING_KEYSTORE_BASE64 secret is missing"; exit 1; fi
+          echo "$SIGNING_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.p12"
+          {
+            echo "storeFile=$RUNNER_TEMP/release.p12"
+            echo "storePassword=$SIGNING_PASSWORD"
+            echo "keyAlias=smartspacer-plugins"
+            echo "keyPassword=$SIGNING_PASSWORD"
+          } > keystore.properties
+
+      - name: Build release APK
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          chmod +x gradlew
+          ./gradlew :uber:assembleRelease --stacktrace
+          cp apks/uber-release.apk "uber-smartspacer-${GITHUB_REF_NAME#uber-}.apk"
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Uber for Smartspacer (updated) ${{ github.ref_name }}
+          body_path: .github/release-notes-uber.md
+          files: uber-smartspacer-*.apk
+          fail_on_unmatched_files: true
